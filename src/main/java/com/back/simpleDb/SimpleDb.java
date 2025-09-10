@@ -24,8 +24,7 @@ public class SimpleDb {
 
     public void run(String sql) {
         Connection connection = getConnection();
-        try {
-            PreparedStatement pstm = connection.prepareStatement(sql);
+        try (PreparedStatement pstm = connection.prepareStatement(sql)) {
             pstm.execute();
 
         } catch (SQLException e) {
@@ -35,8 +34,7 @@ public class SimpleDb {
 
     public void run(String sql, Object... args) {
         Connection connection = getConnection();
-        try {
-            PreparedStatement pstm = connection.prepareStatement(sql);
+        try (PreparedStatement pstm = connection.prepareStatement(sql)) {
 
             for (int i = 0; i < args.length; i++) {
                 Object arg = args[i];
@@ -60,12 +58,10 @@ public class SimpleDb {
     }
 
     public void close() {
-        Connection connection = CONNECTION_THREAD_LOCAL.get();
         try {
-            if (connection != null) {
-                connection.setAutoCommit(true);
-                connection.close();
-            }
+            Connection connection = getConnection();
+            connection.setAutoCommit(true);
+            connection.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
