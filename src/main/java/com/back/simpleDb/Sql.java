@@ -36,19 +36,19 @@ public class Sql {
     }
 
     public long insert() {
-        return jdbcTemplate.executeInsert(getSql());
+        return jdbcTemplate.executeInsert(getSql(), getParameters());
     }
 
     public int update() {
-        return jdbcTemplate.executeUpdate(getSql());
+        return jdbcTemplate.executeUpdate(getSql(), getParameters());
     }
 
     public int delete() {
-        return jdbcTemplate.executeUpdate(getSql());
+        return jdbcTemplate.executeUpdate(getSql(), getParameters());
     }
 
     public List<Map<String, Object>> selectRows() {
-        return jdbcTemplate.query(getSql(), rs -> {
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> {
             List<Map<String, Object>> result = new ArrayList<>();
 
             ResultSetMetaData metaData = rs.getMetaData();
@@ -69,7 +69,7 @@ public class Sql {
     }
 
     public Map<String, Object> selectRow() {
-        return jdbcTemplate.query(getSql(), rs -> {
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> {
             ResultSetMetaData metaData = rs.getMetaData();
             int columnCount = metaData.getColumnCount();
 
@@ -87,7 +87,7 @@ public class Sql {
     }
 
     public <T> T selectRow(Class<T> cls) {
-        return jdbcTemplate.query(getSql(), rs -> {
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> {
             try {
                 if (rs.next()) {
                     return getInstance(cls, rs);
@@ -100,7 +100,7 @@ public class Sql {
     }
 
     public <T> List<T> selectRows(Class<T> cls) {
-        return jdbcTemplate.query(getSql(), rs -> {
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> {
             try {
                 List<T> result = new ArrayList<>();
                 while (rs.next()) {
@@ -116,23 +116,23 @@ public class Sql {
     }
 
     public long selectLong() {
-        return jdbcTemplate.query(getSql(), rs -> rs.next() ? rs.getLong(1) : -1L);
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> rs.next() ? rs.getLong(1) : -1L);
     }
 
     public LocalDateTime selectDatetime() {
-        return jdbcTemplate.query(getSql(), rs -> rs.next() ? rs.getTimestamp(1).toLocalDateTime() : null);
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> rs.next() ? rs.getTimestamp(1).toLocalDateTime() : null);
     }
 
     public String selectString() {
-        return jdbcTemplate.query(getSql(), rs -> rs.next() ? rs.getString(1) : null);
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> rs.next() ? rs.getString(1) : null);
     }
 
     public Boolean selectBoolean() {
-        return jdbcTemplate.query(getSql(), rs -> rs.next() ? rs.getBoolean(1) : null);
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> rs.next() ? rs.getBoolean(1) : null);
     }
 
     public List<Long> selectLongs() {
-        return jdbcTemplate.query(getSql(), rs -> {
+        return jdbcTemplate.query(getSql(), getParameters(), rs -> {
             List<Long> result = new ArrayList<>();
             while (rs.next()) {
                 result.add(rs.getLong(1));
@@ -165,5 +165,9 @@ public class Sql {
 
     private String getSql() {
         return sqlBuilder.getSql();
+    }
+
+    private List<Object> getParameters() {
+        return sqlBuilder.getParameters();
     }
 }

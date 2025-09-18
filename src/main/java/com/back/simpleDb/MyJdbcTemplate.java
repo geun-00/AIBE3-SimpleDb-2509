@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.List;
 
 @Slf4j
 public class MyJdbcTemplate {
@@ -19,19 +20,21 @@ public class MyJdbcTemplate {
         this.devMode = devMode;
     }
 
-    public int executeUpdate(String sql) {
+    public int executeUpdate(String sql, List<Object> parameters) {
         try (PreparedStatement pstm = connection.prepareStatement(sql)) {
+            setParameters(parameters, pstm);
             return pstm.executeUpdate();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            logQuery(sql);
+            logQuery(sql, parameters);
         }
     }
 
-    public int executeInsert(String sql) {
+    public int executeInsert(String sql, List<Object> parameters) {
         try (PreparedStatement pstm = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            setParameters(parameters, pstm);
 
             pstm.executeUpdate();
             ResultSet rs = pstm.getGeneratedKeys();
@@ -43,28 +46,39 @@ public class MyJdbcTemplate {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            logQuery(sql);
+            logQuery(sql, parameters);
         }
 
         return -1;
     }
 
-    public <T> T query(String sql, ResultSetExtractor<T> rse) {
+    public <T> T query(String sql, List<Object> parameters, ResultSetExtractor<T> rse) {
         try (PreparedStatement pstm = connection.prepareStatement(sql);
-             ResultSet rs = pstm.executeQuery()) {
+             ResultSet rs = executeQuery(pstm, parameters)) {
 
             return rse.extractData(rs);
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         } finally {
-            logQuery(sql);
+            logQuery(sql, parameters);
         }
     }
 
-    private void logQuery(String sql) {
+    private ResultSet executeQuery(PreparedStatement pstm, List<Object> parameters) throws SQLException {
+        setParameters(parameters, pstm);
+        return pstm.executeQuery();
+    }
+
+    private void setParameters(List<Object> parameters, PreparedStatement pstm) throws SQLException {
+        for (int i = 0; i < parameters.size(); i++) {
+            pstm.setObject(i + 1, parameters.get(i));
+        }
+    }
+
+    private void logQuery(String sql, List<Object> parameters) {
         if (devMode) {
-            log.info("executed query : \n{}", sql);
+            log.info("\n[Query] : {} \n[Parameters] : {}\n", sql, parameters);
         }
     }
 }

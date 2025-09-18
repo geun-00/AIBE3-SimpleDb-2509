@@ -37,14 +37,7 @@ public class SimpleDb {
         try (PreparedStatement pstm = connection.prepareStatement(sql)) {
 
             for (int i = 0; i < args.length; i++) {
-                Object arg = args[i];
-                int index = i + 1;
-
-                if (arg instanceof String val) {
-                    pstm.setString(index, val);
-                } else if (arg instanceof Boolean val) {
-                    pstm.setBoolean(index, val);
-                }
+                pstm.setObject(i + 1, args[i]);
             }
 
             pstm.execute();

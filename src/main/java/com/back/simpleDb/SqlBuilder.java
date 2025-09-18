@@ -1,42 +1,32 @@
 package com.back.simpleDb;
 
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
 
 public class SqlBuilder {
 
     private final StringBuilder sqlBuilder = new StringBuilder();
+    private final List<Object> parameters = new ArrayList<>();
 
     public void append(CharSequence sql) {
-        sqlBuilder.append(sql).append("\n");
+        sqlBuilder.append(sql).append(" ");
     }
 
     public void append(String sql, Object... params) {
-        int paramIndex = 0;
-
-        for (int i = 0; i < sql.length(); i++) {
-            char c = sql.charAt(i);
-
-            if (c == '?' && paramIndex < params.length) {
-                Object param = params[paramIndex++];
-                sqlBuilder.append("'").append(param.toString()).append("'");
-            } else {
-                sqlBuilder.append(c);
-            }
-        }
-
-        sqlBuilder.append("\n");
+        sqlBuilder.append(sql).append(" ");
+        parameters.addAll(List.of(params));
     }
 
     public void appendIn(String sql, Object... params) {
-        String inParams = Arrays.stream(params)
-                                .map(obj -> "'" + obj.toString() + "'")
-                                .collect(Collectors.joining(", "));
-        sqlBuilder.append(sql.replaceFirst("\\?", inParams))
-                  .append("\n");
+        String replace = String.join(", ", "?".repeat(params.length).split(""));
+        append(sql.replaceFirst("\\?", replace), params);
     }
 
     public String getSql() {
-        return sqlBuilder.toString();
+        return sqlBuilder.toString().strip();
+    }
+
+    public List<Object> getParameters() {
+        return parameters;
     }
 }
